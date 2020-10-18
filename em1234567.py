@@ -39,10 +39,15 @@ class EM1234567:
 
 def test(fund_code):
 	m = EM1234567(fund_code)
-	print('NAME: %s' % m.getRealtimeInfo()['name'])
-	print('RATE (1M): %.2f' % m.getHistoryRate()['1m'])
-	print('RATE (3M): %.2f' % m.getHistoryRate()['3m'])
-	print('RATE (1Y): %.2f' % m.getHistoryRate()['1y'])
+	realtime = m.getRealtimeInfo()
+	hisory = m.getHistoryRate()
+	print('NAME: %s' % realtime['name'])
+	print('UPDATE: %s' % realtime['jzrq'])
+	print('RATE (NOW): %s' % realtime['gszzl'])
+	print('RATE (1M): %.2f' % hisory['1m'])
+	print('RATE (3M): %.2f' % hisory['3m'])
+	print('RATE (6M): %.2f' % hisory['6m'])
+	print('RATE (1Y): %.2f' % hisory['1y'])
 
 if __name__ == '__main__':
 	import sys
