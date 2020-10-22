@@ -1,29 +1,63 @@
+# https://www.cnblogs.com/easypython/p/9084426.html
+
 from em1234567 import EM1234567
 import openpyxl
+import prettytable as pt
+import os
+from time import sleep
 
-def updateSheet(fname, isHistory):
-	wb = openpyxl.load_workbook(fname)
-	sh = wb['INFO']
-	for i in range(1, sh.max_row):
-		fund_code = sh.cell(row=i+1, column=1).value
-		em = EM1234567(fund_code)
-		try:
-			realtime = em.getRealtimeInfo()
-			print('Updating [%s] %s...' % (fund_code, realtime['name']))
-			sh.cell(row=i+1, column=2).value = realtime['name']
-			sh.cell(row=i+1, column=3).value = float(realtime['gszzl'])
-			sh.cell(row=i+1, column=4).value = realtime['gztime']
-			if isHistory == '1':
-				history = em.getHistoryRate()
-				sh.cell(row=i+1, column=5).value = history['1m']
-				sh.cell(row=i+1, column=6).value = history['3m']
-				sh.cell(row=i+1, column=7).value = history['6m']
-				sh.cell(row=i+1, column=8).value = history['1y']
-		except:
-			print('Unable to find [%s].' % fund_code)
-	wb.save(fname)
+class RealtimeEvaluate:
+	def __init__(self, fname):
+		wb = openpyxl.load_workbook(fname)
+		sh = wb['INFO']
+		self.codes = list(map(lambda x: x.value, sh['A']))
+		self.names = list(map(lambda x: x.value, sh['B']))
+		
+	def __colorByRate(self, rate):
+		if os.name == 'nt':
+			return rate
+		if float(rate) > 0.:
+			return '\033[31m'+rate+'\033[0m'
+		else:
+			return '\033[32m'+rate+'\033[0m'
+
+	def __clear(self):
+		if os.name == 'nt':
+			os.system('cls')
+		else:
+			os.system('clear')
+
+	def __timenow(self):
+		if os.name == 'nt':
+			os.system('date /t')
+		else:
+			os.system('date')
+
+	def update(self):
+		rates = []
+		for c in self.codes:
+			em = EM1234567(c)
+			try:
+				realtime = em.getRealtimeInfo()
+				rates.append(self.__colorByRate(realtime['gszzl']))
+			except:
+				rates.append('--')
+		tb = pt.PrettyTable()
+		tb.add_column('CODE', self.codes)
+		tb.add_column('NAME', self.names)
+		tb.add_column('RATE', rates)
+		self.__clear()
+		print(tb)
+
+	def cycleUpdate(self, delay):
+		while True:
+			self.update()
+			self.__timenow()
+			sleep(delay)
+			print('Updating...')
 
 if __name__ == '__main__':
 	import sys
-	updateSheet(sys.argv[1], sys.argv[2])
+	rev = RealtimeEvaluate(sys.argv[1])
+	rev.cycleUpdate(30)
 	
