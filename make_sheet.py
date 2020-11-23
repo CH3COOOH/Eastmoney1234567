@@ -4,7 +4,7 @@ import openpyxl
 def updateSheet(fname, isHistory):
 	wb = openpyxl.load_workbook(fname)
 	sh = wb['INFO']
-	for i in range(1, sh.max_row):
+	for i in range(1, sh.max_row+1):
 		fund_code = sh.cell(row=i, column=1).value
 		em = EM1234567(fund_code)
 		try:

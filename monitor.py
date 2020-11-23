@@ -19,8 +19,8 @@ class RealtimeEvaluate:
 		self.threadNum = threadNum
 
 	def __colorByRate(self, rate):
-		if os.name == 'nt':
-			return rate
+#		if os.name == 'nt':
+#			return rate
 		if float(rate) > 0.:
 			return '\033[31m'+rate+'\033[0m'
 		else:
