@@ -1,3 +1,14 @@
-openpyxl
-requests
-prettytable
+certifi==2020.11.8
+chardet==3.0.4
+et-xmlfile==1.0.1
+gevent==20.9.0
+greenlet==0.4.17
+idna==2.10
+jdcal==1.4.1
+openpyxl==3.0.5
+prettytable==2.0.0
+requests==2.25.0
+urllib3==1.26.2
+wcwidth==0.2.5
+zope.event==4.5.0
+zope.interface==5.2.0
