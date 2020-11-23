@@ -1,18 +1,23 @@
 # https://www.cnblogs.com/easypython/p/9084426.html
 
+import gevent
+from gevent import monkey
+from gevent import pool
+
+monkey.patch_all()
 from em1234567 import EM1234567
 import openpyxl
 import prettytable as pt
 import os
 from time import sleep
-
 class RealtimeEvaluate:
-	def __init__(self, fname):
+	def __init__(self, fname, threadNum=20):
 		wb = openpyxl.load_workbook(fname)
 		sh = wb['INFO']
 		self.codes = list(map(lambda x: x.value, sh['A']))
 		self.names = list(map(lambda x: x.value, sh['B']))
-		
+		self.threadNum = threadNum
+
 	def __colorByRate(self, rate):
 		if os.name == 'nt':
 			return rate
@@ -34,14 +39,30 @@ class RealtimeEvaluate:
 			os.system('date')
 
 	def update(self):
-		rates = []
-		for c in self.codes:
-			em = EM1234567(c)
+
+		def getRealtimeInfo(c):
 			try:
-				realtime = em.getRealtimeInfo()
-				rates.append(self.__colorByRate(realtime['gszzl']))
+				em = EM1234567(c)
+				return em.getRealtimeInfo()
 			except:
-				rates.append('--')
+				return None
+
+		rates = []
+		rate_pool = pool.Pool(self.threadNum)
+		ob_pool = []
+		for c in self.codes:
+			ob = rate_pool.spawn(getRealtimeInfo, c)
+			ob_pool.append(ob)
+		# rate_pool.join()
+		gevent.joinall(ob_pool)
+		for i in ob_pool:
+			try:
+				if i.value is not None:
+					rates.append(self.__colorByRate(i.value['gszzl']))
+				else:
+					rates.append('--')
+			except:
+				rates.append("--")
 		tb = pt.PrettyTable()
 		tb.add_column('CODE', self.codes)
 		tb.add_column('NAME', self.names)
@@ -58,6 +79,8 @@ class RealtimeEvaluate:
 
 if __name__ == '__main__':
 	import sys
-	rev = RealtimeEvaluate(sys.argv[1])
-	rev.cycleUpdate(30)
-	
+	if len(sys.argv) == 2:
+		rev = RealtimeEvaluate(sys.argv[1])
+	else:
+		rev = RealtimeEvaluate(sys.argv[1], int(sys.argv[2]))
+	rev.cycleUpdate(10)
