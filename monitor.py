@@ -64,9 +64,9 @@ class RealtimeEvaluate:
 			except:
 				rates.append("--")
 		tb = pt.PrettyTable()
-		tb.add_column('CODE', self.codes)
-		tb.add_column('NAME', self.names)
-		tb.add_column('RATE', rates)
+		tb.add_column('代码', self.codes)
+		tb.add_column('名称', self.names)
+		tb.add_column('实时', rates)
 		self.__clear()
 		print(tb)
 
@@ -74,13 +74,19 @@ class RealtimeEvaluate:
 		while True:
 			self.update()
 			self.__timenow()
+			if delay <= 0:
+				break
 			sleep(delay)
 			print('Updating...')
 
 if __name__ == '__main__':
 	import sys
-	if len(sys.argv) == 2:
+	if len(sys.argv) == 3:
 		rev = RealtimeEvaluate(sys.argv[1])
+	elif len(sys.argv) == 4:
+		rev = RealtimeEvaluate(sys.argv[1], int(sys.argv[3]))
 	else:
-		rev = RealtimeEvaluate(sys.argv[1], int(sys.argv[2]))
-	rev.cycleUpdate(10)
+		print('Usage: ./monitor <fund_list.xlsx> <delay> [threadNum]')
+		print('if delay == 0 => Update only once')
+		exit(0)
+	rev.cycleUpdate(int(sys.argv[2]))
