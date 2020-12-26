@@ -12,3 +12,5 @@ urllib3==1.26.2
 wcwidth==0.2.5
 zope.event==4.5.0
 zope.interface==5.2.0
+numpy==1.19.3
+matplotlib==3.3.3

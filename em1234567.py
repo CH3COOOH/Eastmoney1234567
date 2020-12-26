@@ -36,6 +36,12 @@ class EM1234567:
 		rate_1m = _rateGen('syl_1y="(\S+)"', r.text)
 		return {'1m': rate_1m, '3m': rate_3m, '6m': rate_6m, '1y': rate_1y}
 
+	def getHistoryPlot(self):
+		r = requests.get('https://fund.eastmoney.com/pingzhongdata/%s.js?v=20160518155842' % self.fund_code)
+		t_points = re.search('Data_ACWorthTrend = \[\[.+?\]\];', r.text).group()
+		t_points = t_points.split(' = ')[1][:-1]
+		return json.loads(t_points)
+
 
 def test(fund_code):
 	m = EM1234567(fund_code)

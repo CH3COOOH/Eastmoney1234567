@@ -10,6 +10,7 @@ import openpyxl
 import prettytable as pt
 import os
 from time import sleep
+
 class RealtimeEvaluate:
 	def __init__(self, fname, threadNum=20):
 		wb = openpyxl.load_workbook(fname)
@@ -40,10 +41,10 @@ class RealtimeEvaluate:
 
 	def update(self):
 
-		def getRealtimeInfo(c):
+		def _getRealtimeInfo(c):
 			try:
 				em = EM1234567(c)
-				return em.getRealtimeInfo()
+				return em._getRealtimeInfo()
 			except:
 				return None
 
@@ -51,7 +52,7 @@ class RealtimeEvaluate:
 		rate_pool = pool.Pool(self.threadNum)
 		ob_pool = []
 		for c in self.codes:
-			ob = rate_pool.spawn(getRealtimeInfo, c)
+			ob = rate_pool.spawn(_getRealtimeInfo, c)
 			ob_pool.append(ob)
 		# rate_pool.join()
 		gevent.joinall(ob_pool)
