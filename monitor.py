@@ -44,7 +44,7 @@ class RealtimeEvaluate:
 		def _getRealtimeInfo(c):
 			try:
 				em = EM1234567(c)
-				return em._getRealtimeInfo()
+				return em.getRealtimeInfo()
 			except:
 				return None
 
