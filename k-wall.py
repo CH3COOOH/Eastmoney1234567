@@ -28,20 +28,18 @@ class HistoryCurve:
 			xy_points = np.array(em.getHistoryPlot())
 			x_time = None
 			y_value = None
-			
+
 			if self.daysAgo >= xy_points.shape[0]:
-				x_time = xy_points[:, 0].astype(np.int64)
+				x_time = np.array(list(range(0, xy_points.shape[0])))
 				y_value = xy_points[:, 1]
-				# x_time_date = map(lambda t: time.strftime('%Y%m%d', time.localtime(t/1000)), x_time)
-				# x_time_date = np.array(list(x_time)).astype(np.int)
+
 			else:
-				x_time = xy_points[-self.daysAgo:, 0].astype(np.int64)
+				x_time = np.array(list(range(0, self.daysAgo)))
 				y_value = xy_points[-self.daysAgo:, 1]
 
 			plt.subplot(n_nxn, n_nxn, i+1)
 			plt.title('[%s] %s' % (self.codes[i], self.names[i]))
 			plt.plot(x_time, y_value)
-			# plt.xticks(x_time, x_time_date)
 
 		plt.show()
 
