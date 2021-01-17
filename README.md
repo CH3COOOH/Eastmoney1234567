@@ -2,8 +2,6 @@
 
 Make money, quickly quickly. Utilization of 1234567 fund APIs.
 
-![Monitor](./monitor.JPG)
-
 ## Usage
 
  - Input fund code into a XLSX file and make a list with name and benefit rate in recent years (optional):
@@ -14,6 +12,13 @@ Make money, quickly quickly. Utilization of 1234567 fund APIs.
 
  `monitor <fund_list.xlsx> <delay> [threadNum]`
 
+ ![Monitor](./monitor.JPG)
+
+ - Show a curve wall:
+
+ `python3 k-wall.py <fund_list.xlsx> [backtracking_days]`
+
+ ![K-wall](./k-wall.JPG)
 
 ## For those who want to build a executable
 

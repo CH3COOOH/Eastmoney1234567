@@ -16,6 +16,11 @@ class HistoryCurve:
 		self.daysAgo = daysAgo
 
 
+	def __getDataFromEM1234567(self, code):
+		em = EM1234567(code)
+		return np.array(em.getHistoryPlotJson())
+
+
 	def update(self):
 
 		n_fund = len(self.codes)
@@ -24,22 +29,42 @@ class HistoryCurve:
 		for i in range(n_fund):
 			print('[%s] %s' % (self.codes[i], self.names[i]))
 
-			em = EM1234567(self.codes[i])
-			xy_points = np.array(em.getHistoryPlot())
+			xy_points = self.__getDataFromEM1234567(self.codes[i])
 			x_time = None
 			y_value = None
 
-			if self.daysAgo >= xy_points.shape[0]:
+			## Extract curve data from array
+			if self.daysAgo < xy_points.shape[0]:
+				x_time = np.array(list(range(0, self.daysAgo)))
+				y_value = xy_points[-self.daysAgo:, 1]
+			else:
+				## The set backtracking days is too big
 				x_time = np.array(list(range(0, xy_points.shape[0])))
 				y_value = xy_points[:, 1]
 
-			else:
-				x_time = np.array(list(range(0, self.daysAgo)))
-				y_value = xy_points[-self.daysAgo:, 1]
+			## Get peak and value now
+			y_max = np.max(y_value)
+			y_now = y_value[-1]
+			idx_peak = np.where(y_value==y_max)
+			rate = (y_now - y_max) / y_max * 100
 
 			plt.subplot(n_nxn, n_nxn, i+1)
+			plt.grid()
 			plt.title('[%s] %s' % (self.codes[i], self.names[i]))
-			plt.plot(x_time, y_value)
+			plt.plot(x_time, y_value, zorder=1)
+			plt.scatter(x_time[idx_peak], y_value[idx_peak], s=7.5, c='red', zorder=2)
+			t_color = 'red'
+			if rate < 0:
+				t_color = 'green'
+			plt.text(x_time[-1], y_value[-1], '%.2f%%' % rate,
+				ha='right',
+				c=t_color,
+				zorder=3,
+				bbox=dict(boxstyle="square",
+					ec='grey',
+					fc='white',
+					alpha=.5
+				))
 
 		plt.show()
 
