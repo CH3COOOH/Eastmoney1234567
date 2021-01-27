@@ -77,8 +77,20 @@ class RealtimeEvaluate:
 		self.__clear()
 		print(tb)
 		if self.logPath != None:
+			html = '''
+<html>
+<head>
+	<title>henChat</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<body>
+%s
+</body>
+</html>
+
+			''' % tb.get_string()
 			with open(self.logPath, 'w') as o:
-				o.write(tb.get_string() + '\n')
+				o.write(html)
 
 	def cycleUpdate(self, delay):
 		while True:
