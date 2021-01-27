@@ -43,8 +43,8 @@ class HistoryCurve:
 				y_value = xy_points[:, 1]
 
 			## Get peak and value now
-			y_max = np.max(y_value)
 			y_now = y_value[-1]
+			y_max = np.max(y_value)
 			idx_peak = np.where(y_value==y_max)
 			rate = (y_now - y_max) / y_max * 100
 
@@ -52,10 +52,15 @@ class HistoryCurve:
 			plt.grid()
 			plt.title('[%s] %s' % (self.codes[i], self.names[i]))
 			plt.plot(x_time, y_value, zorder=1)
-			plt.scatter(x_time[idx_peak], y_value[idx_peak], s=7.5, c='red', zorder=2)
+
 			t_color = 'red'
 			if rate < 0:
 				t_color = 'green'
+				plt.scatter(x_time[idx_peak], y_value[idx_peak], s=7.5, c='red', zorder=2)
+			else:
+				rate = (y_now - y_value[0]) / y_max * 100
+				plt.scatter(x_time[0], y_value[0], s=7.5, c='green', zorder=2)
+
 			plt.text(x_time[-1], y_value[-1], '%.2f%%' % rate,
 				ha='right',
 				c=t_color,
