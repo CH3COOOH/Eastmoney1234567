@@ -84,7 +84,9 @@ class RealtimeEvaluate:
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 </head>
 <body>
+<pre style="word-wrap: break-word; white-space: pre-wrap;">
 %s
+</pre>
 </body>
 </html>
 
