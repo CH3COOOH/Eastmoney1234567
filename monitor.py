@@ -78,7 +78,7 @@ class RealtimeEvaluate:
 		print(tb)
 		if self.logPath != None:
 			with open(self.logPath, 'w') as o:
-				o.write(tb.get_string())
+				o.write(tb.get_string() + '\n')
 
 	def cycleUpdate(self, delay):
 		while True:
