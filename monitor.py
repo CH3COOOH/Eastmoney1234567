@@ -74,9 +74,11 @@ class RealtimeEvaluate:
 		tb.add_column('代码', self.codes)
 		tb.add_column('名称', self.names)
 		tb.add_column('实时', rates)
-		self.__clear()
-		print(tb)
-		if self.logPath != None:
+		if self.logPath == None:
+			self.__clear()
+			print(tb)
+		else:
+			print('Running as daemon...')
 			html = '''
 <html>
 <head>
