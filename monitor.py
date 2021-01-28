@@ -100,7 +100,7 @@ class RealtimeEvaluate:
 		while True:
 			self.update()
 			self.__timenow()
-			if delay <= 0:
+			if delay <= 0 or self.logPath == None:
 				break
 			sleep(delay)
 			print('Updating...')
@@ -116,5 +116,6 @@ if __name__ == '__main__':
 	else:
 		print('Usage: ./monitor <fund_list.xlsx> <delay> [threadNum] [logPath]')
 		print('if delay == 0 => Update only once')
+		print('Log mode supports one-time update only. Please write it into crontab.')
 		exit(0)
 	rev.cycleUpdate(int(sys.argv[2]))

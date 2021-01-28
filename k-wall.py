@@ -3,7 +3,9 @@ import matplotlib.pyplot as plt
 import openpyxl
 from math import ceil
 import time
+
 from em1234567 import EM1234567
+from cal import extractDataFromDays
 
 plt.rcParams['font.sans-serif']=['Microsoft YaHei']
 
@@ -18,7 +20,7 @@ class HistoryCurve:
 
 	def __getDataFromEM1234567(self, code):
 		em = EM1234567(code)
-		return np.array(em.getHistoryPlotJson())
+		return em.getHistoryPlotJson()
 
 
 	def update(self):
@@ -30,17 +32,9 @@ class HistoryCurve:
 			print('[%s] %s' % (self.codes[i], self.names[i]))
 
 			xy_points = self.__getDataFromEM1234567(self.codes[i])
-			x_time = None
-			y_value = None
 
 			## Extract curve data from array
-			if self.daysAgo < xy_points.shape[0]:
-				x_time = np.array(list(range(0, self.daysAgo)))
-				y_value = xy_points[-self.daysAgo:, 1]
-			else:
-				## The set backtracking days is too big
-				x_time = np.array(list(range(0, xy_points.shape[0])))
-				y_value = xy_points[:, 1]
+			x_time, y_value = extractDataFromDays(xy_points, self.daysAgo)
 
 			## Get peak and value now
 			y_now = y_value[-1]
