@@ -49,10 +49,6 @@ class HistoryCurve:
 			t_color = 'red'
 			if self.rateType == 'peak':
 				## Get peak and value now
-				# y_now = y_value[-1]
-				# y_max = np.max(y_value)
-				# idx_peak = np.where(y_value==y_max)
-				# rate = (y_now - y_max) / y_max * 100
 				y_now, y_max, idx, rate = cal.getPeakAndDropRate(y_value)
 
 				if rate < 0:
