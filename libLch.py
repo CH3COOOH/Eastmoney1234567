@@ -23,6 +23,13 @@ class Fund:
 		rate, days = cal.getContinualRateAndDays(self.day_x_value, iDaysBefore)
 		return rate, days
 
+	def getRateAfterDaysFromOneDay(self, iDaysBefore, iDaysAfter):
+		_, v = cal.extractDataFromDays(self.day_x_value, iDaysBefore)
+		aRates = []
+		for i in range(len(v) - iDaysAfter):
+			aRates.append((v[i+iDaysAfter] - v[i]) / v[i])
+		return np.array(aRates)
+
 
 	def write_csv(self, data_sheet, path):
 		np.savetxt(path, data_sheet, delimiter=',')
