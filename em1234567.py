@@ -45,6 +45,13 @@ class EM1234567:
 		t_points = t_points.split(' = ')[1][:-1]
 		return json.loads(t_points)
 
+	def loadHistoryPlotFromLocal(self, src_dir):
+		import csv
+		data = None
+		with open('%s/%s.csv' % (src_dir, self.fund_code), 'r') as o:
+			data = list(csv.reader(o, delimiter=','))
+		return data
+
 
 def test(fund_code):
 	m = EM1234567(fund_code)

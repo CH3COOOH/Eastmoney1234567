@@ -5,8 +5,8 @@ plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']
 plt.rcParams['axes.unicode_minus'] = False
 
 class Plotter:
-	def __init__(self, fund_code):
-		self.fund = lch.Fund(fund_code)
+	def __init__(self, fund_code, src_dir='local-data'):
+		self.fund = lch.Fund(fund_code, src_dir)
 
 	def continualRateAndDays(self, iDays):
 		# Code: crad

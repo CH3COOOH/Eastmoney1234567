@@ -4,10 +4,10 @@ import cal
 from em1234567 import EM1234567
 
 class Fund:
-	def __init__(self, fund_code):
+	def __init__(self, fund_code, src_dir):
 		self.fund_code = fund_code
 		self.em = EM1234567(fund_code)
-		self.day_x_value = self.em.getHistoryPlotJson()
+		self.day_x_value = np.array(self.em.loadHistoryPlotFromLocal(src_dir)).astype(float)
 
 
 	def getDiffValue(self, iDaysBefore):
@@ -23,6 +23,7 @@ class Fund:
 		rate, days = cal.getContinualRateAndDays(self.day_x_value, iDaysBefore)
 		return rate, days
 
+
 	def getRateAfterDaysFromOneDay(self, iDaysBefore, iDaysAfter):
 		_, v = cal.extractDataFromDays(self.day_x_value, iDaysBefore)
 		aRates = []
@@ -35,12 +36,12 @@ class Fund:
 		np.savetxt(path, data_sheet, delimiter=',')
 
 
-def test(code):
-	f = Fund(code)
+def test(code, src):
+	f = Fund(code, src)
 	r, d = f.getContinualRateAndDays(720)
 	f.write_csv(r, 'rate.csv')
 	f.write_csv(d, 'days.csv')
 
 if __name__ == '__main__':
 	import sys
-	test(sys.argv[1])
+	test(sys.argv[1], sys.argv[2])
