@@ -15,6 +15,19 @@ def getFundListFromXlsx(f_xlsx, f_save_dir):
 		except:
 			print('Unable to find [%s].' % fund_code)
 
+def getFundListFromCode(fund_code, f_save_dir):
+	em = EM1234567(fund_code)
+	try:
+		xy = em.getHistoryPlotJson()
+		np.savetxt('%s/%s.csv' % (f_save_dir, fund_code), np.array(xy), delimiter=',')
+	except:
+		print('Unable to find [%s].' % fund_code)
+
+
 if __name__ == '__main__':
 	import sys
-	getFundListFromXlsx(sys.argv[1], sys.argv[2])
+	print('python3 local-update.py <-f <xxx.xlsx>|-c <code>> <dir>')
+	if sys.argv[1] == '-f':
+		getFundListFromXlsx(sys.argv[2], sys.argv[3])
+	elif sys.argv[1] == '-c':
+		getFundListFromCode(sys.argv[2], sys.argv[3])

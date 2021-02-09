@@ -1,4 +1,5 @@
 import libLch as lch
+import cal
 import matplotlib.pyplot as plt
 
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei']
@@ -27,7 +28,19 @@ class Plotter:
 	def rateAfterDaysFromOneDay(self, iDaysBefore, iDaysAfter):
 		# Code: radf
 		r = self.fund.getRateAfterDaysFromOneDay(iDaysBefore, iDaysAfter)
-		plt.hist(r * 100, bins=abs(int(100 * (r.max()-r.min()))), facecolor="blue", edgecolor="black", alpha=0.7)
+		r *= 100
+		r_mean = r.mean()
+		color = lambda x: {-1: 'green', 1: 'red'}[x]
+		plt.hist(r, bins=abs(int(r.max()-r.min())), facecolor="blue", edgecolor="black", alpha=0.7)
+		plt.text(r_mean, 0, '%.2f%%' % r_mean,
+				ha='right',
+				c=color(cal.symbol(r_mean)),
+				# zorder=3,
+				bbox=dict(boxstyle="square",
+					ec='grey',
+					fc='white',
+					alpha=.5
+				))
 		plt.xlabel("涨跌百分比 [%]")
 		plt.ylabel("样本数")
 		plt.title("基金[%s] 自买入起放置%d天" % (self.fund.fund_code, iDaysAfter))
