@@ -33,6 +33,12 @@ if __name__ == '__main__':
 			p1, p2, p3 = todo.split(' ')
 			os.system(PY_CMD + ' local-update.py %s %s %s' % (p1, p2, p3))
 
+		elif ch == '4':
+			todo = input('''
+xlsx文件名 回溯天数 区间峰值or最近极值(peak | nearest)
+> ''')
+			p1, p2, p3 = todo.split(' ')
+			os.system(PY_CMD + ' k-wall.py %s %s %s' % (p1, p2, p3))
 
 		elif ch == '5':
 			todo = input('''
