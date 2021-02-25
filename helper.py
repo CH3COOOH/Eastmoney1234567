@@ -25,33 +25,56 @@ class Plotter:
 		plt.title("基金[%s] 连续增长天数" % self.fund.fund_code)
 		plt.show()
 
-	def rateAfterDaysFromOneDay(self, iDaysBefore, iDaysAfter):
+	def rateAfterDaysFromOneDay(self, iDaysBefore, iDaysAfter, isGraph=False):
 		# Code: radf
 		r = self.fund.getRateAfterDaysFromOneDay(iDaysBefore, iDaysAfter)
 		r *= 100
 		r_mean = r.mean()
-		color = lambda x: {-1: 'green', 1: 'red'}[x]
-		plt.hist(r, bins=abs(int(r.max()-r.min())), facecolor="blue", edgecolor="black", alpha=0.7)
-		plt.text(r_mean, 0, '%.2f%%' % r_mean,
-				ha='right',
-				c=color(cal.symbol(r_mean)),
-				# zorder=3,
-				bbox=dict(boxstyle="square",
-					ec='grey',
-					fc='white',
-					alpha=.5
-				))
-		plt.xlabel("涨跌百分比 [%]")
-		plt.ylabel("样本数")
-		plt.title("基金[%s] 自买入起放置%d天" % (self.fund.fund_code, iDaysAfter))
-		plt.show()
 
+		print('\n从%d天前至今，基金[%s]在任意一天投入%d天后收益期望为%.2f%%\n最高收益为%.2f%%，最低为%.2f%%，风险收益比为%.2f' % (
+			iDaysBefore,
+			self.fund.fund_code,
+			iDaysAfter,
+			r_mean,
+			r.max(),
+			r.min(),
+			r_mean / r.min()))
+
+		if isGraph:
+			color = lambda x: {-1: 'green', 1: 'red'}[x]
+			plt.hist(r, bins=abs(int(r.max()-r.min())), facecolor="blue", edgecolor="black", alpha=0.7)
+			plt.text(r_mean, 0, '%.2f%%' % r_mean,
+					ha='right',
+					c=color(cal.symbol(r_mean)),
+					# zorder=3,
+					bbox=dict(boxstyle="square",
+						ec='grey',
+						fc='white',
+						alpha=.5
+					))
+			plt.xlabel("涨跌百分比 [%]")
+			plt.ylabel("样本数")
+			plt.title("基金[%s] 自买入起放置%d天" % (self.fund.fund_code, iDaysAfter))
+			plt.show()
+
+	def moreThanRate(self, iDaysBefore, iDaysAfter, fChangeRate):
+		r = self.fund.getRateAfterDaysFromOneDay(iDaysBefore, iDaysAfter)
+		r *= 100
+		print('\n从%d天前至今，基金[%s]在任意一天投入%d天后涨/跌超过%.2f%%的比率为%.2f%%' % (
+			iDaysBefore,
+			self.fund.fund_code,
+			iDaysAfter,
+			fChangeRate,
+			cal.getMoreThanRate(r, fChangeRate)))
 
 	def parameters(self, param):
 		if param[0] == 'crad':
 			self.continualRateAndDays(int(param[1]))
 		elif param[0] == 'radf':
 			self.rateAfterDaysFromOneDay(int(param[1]), int(param[2]))
+		elif param[0] == 'mtr':
+			self.moreThanRate(int(param[1]), int(param[2]), float(param[3]))
+
 
 if __name__ == '__main__':
 	import sys
