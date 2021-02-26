@@ -71,13 +71,11 @@ def getHowMuchChangedFromPreviousPeakOrValley(aDataSeries, iStartPoint=-1):
 	fRate = fDelta / fValueOfFound
 	return i, fRate * 100
 
-def getMoreThanRate(aDataSeries, fChangeRate):
-	c = 0
-	if fChangeRate >= 0:
-		c = len(np.where(aDataSeries >= fChangeRate)[0])
-	else:
-		c = len(np.where(aDataSeries <= fChangeRate)[0])
-	return c / len(aDataSeries) * 100
+
+def getAveRaiseAndDrop(aDataSeries):
+	ave_raise = aDataSeries[np.where(aDataSeries >= 0)].mean()
+	ave_drop = aDataSeries[np.where(aDataSeries < 0)].mean()
+	return ave_raise, ave_drop
 
 
 def main():

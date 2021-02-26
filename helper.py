@@ -40,6 +40,9 @@ class Plotter:
 			r.min(),
 			r_mean / r.min()))
 
+		ar, ad = cal.getAveRaiseAndDrop(r)
+		print('增长平均=%.2f%%，回撤平均=%.2f%%' % (ar, ad))
+
 		if isGraph:
 			color = lambda x: {-1: 'green', 1: 'red'}[x]
 			plt.hist(r, bins=abs(int(r.max()-r.min())), facecolor="blue", edgecolor="black", alpha=0.7)
@@ -58,14 +61,37 @@ class Plotter:
 			plt.show()
 
 	def moreThanRate(self, iDaysBefore, iDaysAfter, fChangeRate):
-		r = self.fund.getRateAfterDaysFromOneDay(iDaysBefore, iDaysAfter)
-		r *= 100
-		print('\n从%d天前至今，基金[%s]在任意一天投入%d天后涨/跌超过%.2f%%的比率为%.2f%%' % (
+		r_all, r_half = self.fund.getMoreThanRate(iDaysBefore, iDaysAfter, fChangeRate)
+		r_all *= 100
+		r_half *= 100
+		print('\n从%d天前至今，基金[%s]在任意一天投入%d天后%s超过%.2f%%的比率为%.2f%%' % (
 			iDaysBefore,
 			self.fund.fund_code,
 			iDaysAfter,
+			{-1: '跌', 1: '涨'}[cal.symbol(fChangeRate)],
 			fChangeRate,
-			cal.getMoreThanRate(r, fChangeRate)))
+			r_all))
+		print('如果只考虑%s，则该比例为%.2f%%' % (
+			{-1: '跌', 1: '涨'}[cal.symbol(fChangeRate)],
+			r_half))
+
+	def predictByChangeRate(self, iDaysBefore, iDaysAfter, fChangeRate, offset, pdtDays):
+		print('\n从%d天前至今，基金[%s]在%d天内%s%.2f%%(+%.2f-)的' % (
+			iDaysBefore,
+			self.fund.fund_code,
+			iDaysAfter,
+			{-1: '下跌', 1: '上涨'}[cal.symbol(fChangeRate)],
+			fChangeRate,
+			offset))
+		
+		dPredict = self.fund.getPredictByChangeRate(iDaysBefore, iDaysAfter, fChangeRate, offset, pdtDays)
+		for d in dPredict.keys():
+			print('  %d天后：%.2f%% - %.2f%%, ave = %.2f%%' % (
+				d,
+				dPredict[d][0],
+				dPredict[d][1],
+				dPredict[d][2]))
+
 
 	def parameters(self, param):
 		if param[0] == 'crad':
@@ -74,7 +100,8 @@ class Plotter:
 			self.rateAfterDaysFromOneDay(int(param[1]), int(param[2]))
 		elif param[0] == 'mtr':
 			self.moreThanRate(int(param[1]), int(param[2]), float(param[3]))
-
+		elif param[0] == 'pbcr':
+			self.predictByChangeRate(int(param[1]), int(param[2]), float(param[3]), float(param[4]), int(param[5]))
 
 if __name__ == '__main__':
 	import sys
