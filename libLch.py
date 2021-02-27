@@ -10,6 +10,11 @@ class Fund:
 		self.day_x_value = np.array(self.em.loadHistoryPlotFromLocal(src_dir)).astype(float)
 
 
+	def getSampleNum(self, iDaysBefore):
+		_, v = cal.extractDataFromDays(self.day_x_value, iDaysBefore)
+		return len(v)
+
+
 	def getDiffValue(self, iDaysBefore):
 		_, v = cal.extractDataFromDays(self.day_x_value, iDaysBefore)
 		return np.diff(v)
@@ -34,11 +39,6 @@ class Fund:
 
 	def getMoreThanRate(self, iDaysBefore, iDaysAfter, fChangeRate):
 		aDataSeries = 100 * self.getRateAfterDaysFromOneDay(iDaysBefore, iDaysAfter)
-		# c = 0
-		# if fChangeRate >= 0:
-		# 	c = len(np.where(aDataSeries >= fChangeRate)[0])
-		# else:
-		# 	c = len(np.where(aDataSeries <= fChangeRate)[0])
 		c = len(np.where(cal.symbol(fChangeRate) * aDataSeries >= cal.symbol(fChangeRate) * fChangeRate)[0])
 		r1 = c / len(aDataSeries)
 		aDataHalf = aDataSeries[np.where(cal.symbol(fChangeRate) * aDataSeries >= 0)]
@@ -47,22 +47,35 @@ class Fund:
 		return r1, r2
 
 
-	def getPredictByChangeRate(self, iDaysBefore, iDaysAfter, fChangeRate, offset=.3, pdtDays=3):
+	def getPredictByChangeRate(self, iDaysBefore, iDaysAfter, fChangeRate, pdtDays=3):
 		aRateArray = 100 * self.getRateAfterDaysFromOneDay(iDaysBefore, iDaysAfter)
-		idx_up = np.where(aRateArray<=fChangeRate+offset)[0]
-		idx_down = np.where(aRateArray>=fChangeRate-offset)[0]
-		idx_hit = np.array(list(set(idx_up) & set(idx_down))).astype(int)
-		print(idx_hit)
-		dResult = {}
+		_, aDataArray = cal.extractDataFromDays(self.day_x_value, iDaysBefore)
+		# 比如我想查找-5.3%，实际查找的是(-5, -6)范围内的记录
+		genRange = [int(fChangeRate), int(fChangeRate) + cal.symbol(fChangeRate) * 1]
+		genRange.sort()
+		idx_hit = np.where((aRateArray >= genRange[0]) & (aRateArray <= genRange[1]))[0]
+		# 计算命中样本在样本空间中的占比
+		iSampleNum = len(idx_hit)
+
+		dResultList = {}
 		for d in range(1, pdtDays+1):
-			if (idx_hit+iDaysAfter+d)[-1] > len(aRateArray)-1:
+			dResultList[d] = []
+		# d1: [r1, r2, ...]
+		# d2: [r1, r2, ...]
+		for i in idx_hit:
+			if i + pdtDays + iDaysAfter > len(aDataArray) - 1:
 				continue
-			v_now = self.day_x_value[idx_hit+iDaysAfter]
-			v_after = self.day_x_value[idx_hit+iDaysAfter+d]
-			rate = (v_after - v_now) / v_now * 100
-			# print(rate)
-			dResult[d] = [rate.min(), rate.max(), rate.mean()]
-		return dResult
+			fValue = aDataArray[i+iDaysAfter]
+			for d in range(1, pdtDays+1):
+				fValueOfNDaysAfter = aDataArray[i+iDaysAfter+d]
+				fRate = 100 * (fValueOfNDaysAfter - fValue) / fValue
+				dResultList[d].append(fRate)
+
+		for d in dResultList.keys():
+			ds = dResultList[d]
+			dResultList[d] = [np.min(ds), np.max(ds), np.mean(ds)]
+
+		return dResultList, iSampleNum
 
 	def write_csv(self, data_sheet, path):
 		np.savetxt(path, data_sheet, delimiter=',')

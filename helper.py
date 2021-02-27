@@ -75,22 +75,22 @@ class Plotter:
 			{-1: '跌', 1: '涨'}[cal.symbol(fChangeRate)],
 			r_half))
 
-	def predictByChangeRate(self, iDaysBefore, iDaysAfter, fChangeRate, offset, pdtDays):
-		print('\n从%d天前至今，基金[%s]在%d天内%s%.2f%%(+%.2f-)的' % (
+	def predictByChangeRate(self, iDaysBefore, iDaysAfter, fChangeRate, pdtDays):
+		print('\n从%d天前至今，基金[%s]在%d天内%s%.2f%%(左右)的' % (
 			iDaysBefore,
 			self.fund.fund_code,
 			iDaysAfter,
 			{-1: '下跌', 1: '上涨'}[cal.symbol(fChangeRate)],
-			fChangeRate,
-			offset))
+			fChangeRate))
 		
-		dPredict = self.fund.getPredictByChangeRate(iDaysBefore, iDaysAfter, fChangeRate, offset, pdtDays)
+		dPredict, iSampleNum = self.fund.getPredictByChangeRate(iDaysBefore, iDaysAfter, fChangeRate, pdtDays)
 		for d in dPredict.keys():
-			print('  %d天后：%.2f%% - %.2f%%, ave = %.2f%%' % (
+			print('  %d天后：%.2f%% (最差), %.2f%% (最佳), %.2f%%(均值)' % (
 				d,
 				dPredict[d][0],
 				dPredict[d][1],
 				dPredict[d][2]))
+		print('* 样本数%d, 占比%.2f%%' % (iSampleNum, 100 * iSampleNum / self.fund.getSampleNum(iDaysBefore)))
 
 
 	def parameters(self, param):
@@ -101,7 +101,7 @@ class Plotter:
 		elif param[0] == 'mtr':
 			self.moreThanRate(int(param[1]), int(param[2]), float(param[3]))
 		elif param[0] == 'pbcr':
-			self.predictByChangeRate(int(param[1]), int(param[2]), float(param[3]), float(param[4]), int(param[5]))
+			self.predictByChangeRate(int(param[1]), int(param[2]), float(param[3]), int(param[4]))
 
 if __name__ == '__main__':
 	import sys

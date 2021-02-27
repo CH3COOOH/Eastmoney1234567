@@ -21,3 +21,6 @@
 
 ## Local-update
 - [x] 增加one-shot模式
+
+## 全局
+- 统一使用csv格式数据（影响范围：make_sheet, local-update, monitor）

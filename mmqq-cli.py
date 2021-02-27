@@ -50,16 +50,20 @@ xlsx文件名 回溯天数 区间峰值or最近极值(peak | nearest)
 		elif ch == '5':
 			todo = input('''
 【LCH】 需要分析什么信息？
-crad. 统计最大连续涨/跌百分比和天数
-radf. 统计N天损益
- mtr. 统计基金任意一天投入N天后涨/跌超过R%的比率
+1. 统计最大连续涨/跌百分比和天数
+2. 统计N天损益
+3. 统计基金任意一天投入N天后涨/跌超过R%的比率
+4. 统计基金任意一天投入N天后涨/跌超过R%后d天内的涨跌状况
 > ''')
-			if todo == 'crad':
+			if todo == '1':
 				cd, p1 = input('基金代码 回溯天数 = ').split(' ')
-				os.system(PY_CMD + ' helper.py %s %s %s' % (cd, todo, p1))
-			elif todo == 'radf':
+				os.system(PY_CMD + ' helper.py %s crad %s' % (cd, p1))
+			elif todo == '2':
 				cd, p1, p2 = input('基金代码 回溯天数 N = ').split(' ')
-				os.system(PY_CMD + ' helper.py %s %s %s %s' % (cd, todo, p1, p2))
-			elif todo == 'mtr':
+				os.system(PY_CMD + ' helper.py %s radf %s %s' % (cd, p1, p2))
+			elif todo == '3':
 				cd, p1, p2, p3 = input('基金代码 回溯天数 N R = ').split(' ')
-				os.system(PY_CMD + ' helper.py %s %s %s %s %s' % (cd, todo, p1, p2, p3))
+				os.system(PY_CMD + ' helper.py %s mtr %s %s %s' % (cd, p1, p2, p3))
+			elif todo == '4':
+				cd, p1, p2, p3, p4 = input('基金代码 回溯天数 N R d = ').split(' ')
+				os.system(PY_CMD + ' helper.py %s pbcr %s %s %s %s' % (cd, p1, p2, p3, p4))
