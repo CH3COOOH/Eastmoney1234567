@@ -145,7 +145,7 @@ class RealtimeEvaluate:
 		while True:
 			self.update()
 			self.__timenow()
-			if delay <= 0 or self.logPath == None:
+			if delay <= 0 or self.logPath != None:
 				break
 			sleep(delay)
 			print('Updating...')
