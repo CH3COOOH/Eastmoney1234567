@@ -4,16 +4,32 @@ import sys
 sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=1)
 
 
-import gevent
-from gevent import monkey
-from gevent import pool
+# import gevent
+# from gevent import monkey
+# from gevent import pool
 
-monkey.patch_all()
+# monkey.patch_all()
+
+import threading
+
 from em1234567 import EM1234567
 import openpyxl
 import prettytable as pt
 import os
+from math import ceil
 from time import sleep
+
+
+class ListContainer:
+	def __init__(self):
+		self.container = []
+
+	def insert(self, x):
+		self.container.append(x)
+
+	def get(self):
+		return self.container
+
 
 class RealtimeEvaluate:
 	def __init__(self, fname, threadNum=20, logPath=None):
@@ -25,8 +41,6 @@ class RealtimeEvaluate:
 		self.logPath = logPath
 
 	def __colorByRate(self, rate):
-#		if os.name == 'nt':
-#			return rate
 		if float(rate) > 0.:
 			return '\033[31m'+rate+'\033[0m'
 		else:
@@ -55,29 +69,56 @@ class RealtimeEvaluate:
 			except:
 				return None
 
-		rates = []
-		rate_pool = pool.Pool(self.threadNum)
-		ob_pool = []
-		for c in self.codes:
-			ob = rate_pool.spawn(_getRealtimeInfo, c)
-			ob_pool.append(ob)
-		# rate_pool.join()
-		gevent.joinall(ob_pool)
-		for i in ob_pool:
+		def _getRealtimeInfoFromCodeList(cl, container):
+			for c in cl:
+				container.insert(_getRealtimeInfo(c))
+			return 0
+
+		def _chunks(arr, m):
+			n = int(ceil(len(arr) / float(m)))
+			return [arr[i:i + n] for i in range(0, len(arr), n)]
+
+		rates_raw = ListContainer()
+		code_groups = _chunks(self.codes, self.threadNum)
+		task_list = []
+
+		for cg in code_groups:
+			task = threading.Thread(target=_getRealtimeInfoFromCodeList, args=(cg, rates_raw, ))
+			task_list.append(task)
+			task.start()
+
+		for t in task_list:
+			t.join()
+
+		json_list = rates_raw.get()
+
+		display_codes = []
+		display_names = []
+		display_rates = []
+
+		for j in json_list:
 			try:
-				if i.value is not None:
+				if j is not None:
+					display_codes.append(j['fundcode'])
+					display_names.append(j['name'])
 					if self.logPath == None:
-						rates.append(self.__colorByRate(i.value['gszzl']))
+						display_rates.append(self.__colorByRate(j['gszzl']))
 					else:
-						rates.append(i.value['gszzl'])
+						display_rates.append(i['gszzl'])
 				else:
-					rates.append('--')
+					display_codes.append('--')
+					display_names.append('--')
+					display_rates.append('--')
 			except:
-				rates.append("--")
+				display_codes.append('ERR')
+				display_names.append('ERR')
+				display_rates.append('ERR')
+
 		tb = pt.PrettyTable()
-		tb.add_column('代码', self.codes)
-		tb.add_column('名称', self.names)
-		tb.add_column('实时', rates)
+		tb.add_column('代码', display_codes)
+		tb.add_column('名称', display_names)
+		tb.add_column('实时', display_rates)
+
 		if self.logPath == None:
 			self.__clear()
 			print(tb)
@@ -123,3 +164,5 @@ if __name__ == '__main__':
 		print('Log mode supports one-time update only. Please write it into crontab.')
 		exit(0)
 	rev.cycleUpdate(int(sys.argv[2]))
+
+
