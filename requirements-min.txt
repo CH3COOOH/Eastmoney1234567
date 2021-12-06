@@ -1,0 +1,4 @@
+openpyxl==3.0.5
+prettytable==2.0.0
+requests==2.25.0
+urllib3==1.26.2
