@@ -1,4 +1,8 @@
+#  -*- coding: utf-8 -*-
 # https://www.cnblogs.com/easypython/p/9084426.html
+import sys
+sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=1)
+
 
 import gevent
 from gevent import monkey

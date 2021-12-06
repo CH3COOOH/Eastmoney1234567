@@ -1,5 +1,6 @@
 import os
-
+import sys
+sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=1)
 PY_CMD = 'py'
 
 if __name__ == '__main__':
