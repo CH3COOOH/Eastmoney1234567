@@ -104,7 +104,7 @@ class RealtimeEvaluate:
 					if self.logPath == None:
 						display_rates.append(self.__colorByRate(j['gszzl']))
 					else:
-						display_rates.append(i['gszzl'])
+						display_rates.append(j['gszzl'])
 				else:
 					display_codes.append('--')
 					display_names.append('--')
