@@ -65,7 +65,10 @@ class RealtimeEvaluate:
 		def _getRealtimeInfo(c):
 			try:
 				em = EM1234567(c)
-				return em.getRealtimeInfo()
+				if self.logPath == None:
+					return em.getRealtimeInfo()
+				else:
+					return {**em.getRealtimeInfo(), **em.getHistoryRate()}
 			except:
 				return None
 
@@ -95,6 +98,11 @@ class RealtimeEvaluate:
 		display_codes = []
 		display_names = []
 		display_rates = []
+		## For HTML mode
+		print_1y = []
+		print_6m = []
+		print_3m = []
+		print_1m = []
 
 		for j in json_list:
 			try:
@@ -105,26 +113,45 @@ class RealtimeEvaluate:
 						display_rates.append(self.__colorByRate(j['gszzl']))
 					else:
 						display_rates.append(j['gszzl'])
+						print_1y.append(j['1y'])
+						print_6m.append(j['6m'])
+						print_3m.append(j['3m'])
+						print_1m.append(j['1m'])
 				else:
 					display_codes.append('--')
 					display_names.append('--')
 					display_rates.append('--')
+					print_1y.append('--')
+					print_6m.append('--')
+					print_3m.append('--')
+					print_1m.append('--')
 			except:
 				display_codes.append('ERR')
 				display_names.append('ERR')
 				display_rates.append('ERR')
+				print_1y.append('ERR')
+				print_6m.append('ERR')
+				print_3m.append('ERR')
+				print_1m.append('ERR')
 
 		tb = pt.PrettyTable()
-		display_rates, display_codes, display_names = zip(*sorted(zip(display_rates, display_codes, display_names)))
-		tb.add_column('代码', display_codes)
-		tb.add_column('名称', display_names)
-		tb.add_column('实时', display_rates)
 
 		if self.logPath == None:
+			display_rates, display_codes, display_names = zip(*sorted(zip(display_rates, display_codes, display_names)))
+			tb.add_column('代码', display_codes)
+			tb.add_column('名称', display_names)
+			tb.add_column('实时', display_rates)
 			self.__clear()
 			print(tb)
 		else:
-			print('Running as daemon...')
+			print('Generating HTML...')
+			tb.add_column('代码', display_codes)
+			tb.add_column('名称', display_names)
+			tb.add_column('实时', display_rates)
+			tb.add_column('1月', print_1m)
+			tb.add_column('3月', print_3m)
+			tb.add_column('半年', print_6m)
+			tb.add_column('一年', print_1y)
 			html = '''
 <html>
 <head>
@@ -139,6 +166,7 @@ class RealtimeEvaluate:
 </html>
 
 			''' % tb.get_string()
+			print(tb.get_string())
 			with open(self.logPath, 'w') as o:
 				o.write(html)
 
