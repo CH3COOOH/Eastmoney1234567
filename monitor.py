@@ -115,6 +115,7 @@ class RealtimeEvaluate:
 				display_rates.append('ERR')
 
 		tb = pt.PrettyTable()
+		display_rates, display_codes, display_names = zip(*sorted(zip(display_rates, display_codes, display_names)))
 		tb.add_column('代码', display_codes)
 		tb.add_column('名称', display_names)
 		tb.add_column('实时', display_rates)
