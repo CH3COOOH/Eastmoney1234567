@@ -1,13 +1,13 @@
 certifi
-chardet==7.4.3
+chardet==3.0.4
 et-xmlfile==2.0.0
-idna==3.15
+idna==2.10
 jdcal==1.4.1
-wcwidth==0.7.0
+wcwidth==0.8.1
 zope.event==6.2
 zope.interface==8.4
 numpy==2.2.6
-matplotlib==3.10.9
+matplotlib==3.11.0
 openpyxl==3.1.5
 prettytable==3.18.0
 requests==2.34.2

@@ -109,7 +109,7 @@ class HistoryCurve:
 		plt.subplots_adjust(hspace=0.4, wspace=0.35, top=0.92)
 
 		if self.headless:
-			plt.savefig(self.img_save_path, bbox_inches='tight', dpi=300)
+			plt.savefig(self.img_save_path, bbox_inches='tight', dpi=150, format='jpg')
 			plt.close()
 		else:
 			plt.show()
