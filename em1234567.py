@@ -13,7 +13,7 @@ class EM1234567:
 
 	def __getHistoryText(self):
 		# r = requests.get('https://fund.eastmoney.com/pingzhongdata/%s.js?v=20160518155842' % self.fund_code)
-		r = requests.get('https://fund.eastmoney.com/pingzhongdata/%s.js' % self.fund_code)
+		r = requests.get('https://fund.eastmoney.com/pingzhongdata/%s.js' % self.fund_code, timeout=10)
 		return r.text
 
 	def getRealtimeInfo(self):
@@ -27,7 +27,7 @@ class EM1234567:
 		# gszzl (gu suan zeng zhang lv)
 		# gztime (gu zhi time)
 		## ^^ Eastmoney has been not available...T^T
-		r = requests.get(f"https://stock.finance.sina.com.cn/fundInfo/api/openapi.php/FdFundService.getEstimateNetworthPic?symbol={self.fund_code}")
+		r = requests.get(f"https://stock.finance.sina.com.cn/fundInfo/api/openapi.php/FdFundService.getEstimateNetworthPic?symbol={self.fund_code}", timeout=10)
 		return self.__jsonLoad(r.text)['result']['data']['networth'][-1]
 	
 	def getNameByCode(self):
