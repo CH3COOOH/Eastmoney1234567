@@ -36,9 +36,9 @@ class RealtimeEvaluate:
 	def __colorByRate(self, rate):
 		rate_per = float(rate) * 100
 		if rate_per > 0.:
-			return '\033[31m'+'{:.2f}%'.format(rate_per)+'\033[0m'
+			return '\033[31m'+'{:.2f}'.format(rate_per)+'\033[0m'
 		else:
-			return '\033[32m'+'{:.2f}%'.format(rate_per)+'\033[0m'
+			return '\033[32m'+'{:.2f}'.format(rate_per)+'\033[0m'
 
 	def __clear(self):
 		if os.name == 'nt':
@@ -109,7 +109,7 @@ class RealtimeEvaluate:
 					if self.logPath == None:
 						display_rates.append(self.__colorByRate(latest_rate))
 					else:
-						display_rates.append('{:.2f}%'.format(float(latest_rate) * 100))
+						display_rates.append('{:.2f}'.format(float(latest_rate) * 100))
 						history_rate = EM1234567(j['symbol']).getHistoryRate()
 						print_1y.append(history_rate['1y'])
 						print_6m.append(history_rate['6m'])
