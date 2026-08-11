@@ -3,13 +3,6 @@
 import sys
 sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=1)
 
-
-# import gevent
-# from gevent import monkey
-# from gevent import pool
-
-# monkey.patch_all()
-
 import threading
 
 from em1234567 import EM1234567
@@ -18,7 +11,7 @@ import prettytable as pt
 import os
 from math import ceil
 from time import sleep
-
+import datetime
 
 class ListContainer:
 	def __init__(self):
@@ -41,10 +34,11 @@ class RealtimeEvaluate:
 		self.logPath = logPath
 
 	def __colorByRate(self, rate):
-		if float(rate) > 0.:
-			return '\033[31m'+rate+'\033[0m'
+		rate_per = float(rate) * 100
+		if rate_per > 0.:
+			return '\033[31m'+'{:.2f}%'.format(rate_per)+'\033[0m'
 		else:
-			return '\033[32m'+rate+'\033[0m'
+			return '\033[32m'+'{:.2f}%'.format(rate_per)+'\033[0m'
 
 	def __clear(self):
 		if os.name == 'nt':
@@ -53,22 +47,22 @@ class RealtimeEvaluate:
 			os.system('clear')
 
 	def __timenow(self):
-		if os.name == 'nt':
-			os.system('date /t')
-		else:
-			os.system('date')
-			if self.logPath != None:
-				os.system('echo $(date) >> ' + self.logPath)
+		now = datetime.datetime.now()
+		now_str = now.strftime('%Y-%m-%d %H:%M:%S')
+		print('Update: %s' % now_str)
+		return now_str
 
 	def update(self):
 
 		def _getRealtimeInfo(c):
 			try:
 				em = EM1234567(c)
+				result = em.getRealtimeInfo()
+				result['name'] = em.getNameByCode()
 				if self.logPath == None:
-					return em.getRealtimeInfo()
+					return result
 				else:
-					return {**em.getRealtimeInfo(), **em.getHistoryRate()}
+					return {**result, **em.getHistoryRate()}
 			except:
 				return None
 
@@ -107,16 +101,20 @@ class RealtimeEvaluate:
 		for j in json_list:
 			try:
 				if j is not None:
-					display_codes.append(j['fundcode'])
+					# display_codes.append(j['fundcode'])
+					# display_names.append(j['name'])
+					display_codes.append(j['symbol'])
 					display_names.append(j['name'])
+					latest_rate = j['growthrate']
 					if self.logPath == None:
-						display_rates.append(self.__colorByRate(j['gszzl']))
+						display_rates.append(self.__colorByRate(latest_rate))
 					else:
-						display_rates.append(j['gszzl'])
-						print_1y.append(j['1y'])
-						print_6m.append(j['6m'])
-						print_3m.append(j['3m'])
-						print_1m.append(j['1m'])
+						display_rates.append('{:.2f}%'.format(float(latest_rate) * 100))
+						history_rate = EM1234567(j['symbol']).getHistoryRate()
+						print_1y.append(history_rate['1y'])
+						print_6m.append(history_rate['6m'])
+						print_3m.append(history_rate['3m'])
+						print_1m.append(history_rate['1m'])
 				else:
 					display_codes.append('--')
 					display_names.append('--')
@@ -125,7 +123,7 @@ class RealtimeEvaluate:
 					print_6m.append('--')
 					print_3m.append('--')
 					print_1m.append('--')
-			except:
+			except Exception as e:
 				display_codes.append('ERR')
 				display_names.append('ERR')
 				display_rates.append('ERR')
@@ -133,6 +131,7 @@ class RealtimeEvaluate:
 				print_6m.append('ERR')
 				print_3m.append('ERR')
 				print_1m.append('ERR')
+				print('Error: %s' % e)
 
 		tb = pt.PrettyTable()
 
@@ -152,7 +151,7 @@ class RealtimeEvaluate:
 			tb.add_column('3月', print_3m)
 			tb.add_column('半年', print_6m)
 			tb.add_column('一年', print_1y)
-			html = '''
+			html = f'''
 <html>
 <head>
 	<title>henChat</title>
@@ -160,14 +159,14 @@ class RealtimeEvaluate:
 </head>
 <body>
 <pre style="word-wrap: break-word; white-space: pre-wrap;">
-%s
+{tb.get_string()}
+{self.__timenow()}
 </pre>
 </body>
 </html>
-
-			''' % tb.get_string()
+			'''
 			print(tb.get_string())
-			with open(self.logPath, 'w') as o:
+			with open(self.logPath, 'w', encoding='utf-8') as o:
 				o.write(html)
 
 	def cycleUpdate(self, delay):

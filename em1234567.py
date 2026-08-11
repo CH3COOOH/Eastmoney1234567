@@ -12,12 +12,12 @@ class EM1234567:
 		return json.loads(re.match(".*?({.*}).*", sJson, re.S).group(1))
 
 	def __getHistoryText(self):
-		r = requests.get('https://fund.eastmoney.com/pingzhongdata/%s.js?v=20160518155842' % self.fund_code)
+		# r = requests.get('https://fund.eastmoney.com/pingzhongdata/%s.js?v=20160518155842' % self.fund_code)
+		r = requests.get('https://fund.eastmoney.com/pingzhongdata/%s.js' % self.fund_code)
 		return r.text
 
 	def getRealtimeInfo(self):
-		r = requests.get('https://fundgz.1234567.com.cn/js/%s.js?rt=1463558676006' % self.fund_code)
-		return self.__jsonLoad(r.text)
+		# r = requests.get('https://fundgz.1234567.com.cn/js/%s.js?rt=1463558676006' % self.fund_code)
 		# *** keys ***
 		# fundcode
 		# name
@@ -26,6 +26,14 @@ class EM1234567:
 		# gsz (gu suan zhi)
 		# gszzl (gu suan zeng zhang lv)
 		# gztime (gu zhi time)
+		## ^^ Eastmoney has been not available...T^T
+		r = requests.get(f"https://stock.finance.sina.com.cn/fundInfo/api/openapi.php/FdFundService.getEstimateNetworthPic?symbol={self.fund_code}")
+		return self.__jsonLoad(r.text)['result']['data']['networth'][-1]
+	
+	def getNameByCode(self):
+		raw_info = self.__getHistoryText()
+		m = re.search(r'var\s+fS_name\s*=\s*"([^"]*)";', raw_info)
+		return m.group(1) if m else None
 
 	def getHistoryRate(self):
 		def _rateGen(pattern, fromText):
@@ -57,9 +65,9 @@ def test(fund_code):
 	m = EM1234567(fund_code)
 	realtime = m.getRealtimeInfo()
 	hisory = m.getHistoryRate()
-	print('NAME: %s' % realtime['name'])
-	print('UPDATE: %s' % realtime['jzrq'])
-	print('RATE (NOW): %s' % realtime['gszzl'])
+	print('NAME: %s' % m.getNameByCode())
+	# print('UPDATE: %s' % realtime['jzrq'])
+	print('RATE (NOW): %s' % realtime['growthrate'])
 	print('RATE (1M): %.2f' % hisory['1m'])
 	print('RATE (3M): %.2f' % hisory['3m'])
 	print('RATE (6M): %.2f' % hisory['6m'])
