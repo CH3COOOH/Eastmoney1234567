@@ -20,6 +20,16 @@ Make money, quickly quickly. Utilization of 1234567 fund APIs.
 
  ![K-wall](./k-wall.JPG)
 
+ - Generate a one-minute candlestick and MACD chart (defaults to the
+   Shanghai-Shenzhen 300 Index if no arguments are provided):
+
+ `python dailychart\chart-srv.py [six_digit_code name]`
+
+ For example: `python dailychart\chart-srv.py 600000 浦发银行`. Use
+ `--security-type index` to query an index instead. Each code has its own
+ minute-data cache and chart in `dailychart\data\minute_cache` and
+ `dailychart\charts`.
+
 ## For those who want to build a executable
 
 > https://github.com/pyinstaller/pyinstaller/issues/5319
