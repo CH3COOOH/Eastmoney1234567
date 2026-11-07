@@ -23,12 +23,20 @@ Make money, quickly quickly. Utilization of 1234567 fund APIs.
  - Generate a one-minute candlestick and MACD chart (defaults to the
    Shanghai-Shenzhen 300 Index if no arguments are provided):
 
- `python dailychart\chart-srv.py [six_digit_code name]`
+ `python dailychart\chart-srv.py [six_digit_code name] [--filename image.jpg]`
 
  For example: `python dailychart\chart-srv.py 600000 浦发银行`. Use
  `--security-type index` to query an index instead. Each code has its own
  minute-data cache and chart in `dailychart\data\minute_cache` and
- `dailychart\charts`.
+ `dailychart\charts`. The default image filename is
+ `<code>-<security_type>-latest.jpg`; override it with `--filename`. Absolute
+ paths are used directly; relative paths are resolved under `dailychart\charts`.
+ For example: `--filename "D:\charts\my-chart.jpg"` or
+ `--filename "custom\my-chart.jpg"`. Network requests use a direct connection
+ by default; configure an HTTP or SOCKS5 proxy with `--proxy`, for example
+ `--proxy http://127.0.0.1:8080` or `--proxy socks5://127.0.0.1:1080`.
+ HTTP requests reuse a session to keep connections alive, with a 15-second
+ connect timeout and a 30-second read timeout.
 
 ## For those who want to build a executable
 

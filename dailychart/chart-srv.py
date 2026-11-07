@@ -1,6 +1,10 @@
 import argparse
 import akshare as ak
+import inspect
+import os
+import random
 import pandas as pd
+import requests
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.patches import Rectangle
@@ -9,6 +13,7 @@ import time
 
 from pathlib import Path
 from datetime import datetime, timedelta
+from urllib.parse import urlsplit
 
 
 # ==================================================
@@ -37,6 +42,12 @@ IMAGE_HEIGHT = 10
 
 # K线实体宽度（分钟）。1分钟K线建议 0.6～0.75。
 CANDLE_WIDTH_MINUTES = 0.65
+REQUEST_CONNECT_TIMEOUT = 15
+REQUEST_READ_TIMEOUT = 30
+SHARED_HTTP_SESSION = None
+ORIGINAL_REQUESTS_GET = None
+ORIGINAL_AKSHARE_RETRY = None
+ORIGINAL_AKSHARE_FUNC_RETRY = None
 
 
 # ==================================================
@@ -106,6 +117,144 @@ def clean_data(df):
         raise RuntimeError("清洗后没有有效行情数据")
 
     return result[["时间", "开盘", "最高", "最低", "收盘", "成交量"]]
+
+
+def validate_proxy_url(value):
+    try:
+        parsed = urlsplit(value)
+        port = parsed.port
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"代理地址无效：{exc}") from exc
+
+    if (
+        parsed.scheme.lower() not in {"http", "https", "socks5", "socks5h"}
+        or not parsed.hostname
+        or port is None
+        or parsed.path not in ("", "/")
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise argparse.ArgumentTypeError(
+            "代理地址需为 http://主机:端口、https://主机:端口"
+            "或 socks5://主机:端口格式"
+        )
+    return value
+
+
+def configure_proxy(proxy_url):
+    proxy_variables = (
+        "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY",
+        "http_proxy", "https_proxy", "all_proxy",
+    )
+    if proxy_url and urlsplit(proxy_url).scheme.lower() in {"socks5", "socks5h"}:
+        try:
+            __import__("socks")
+        except ImportError as exc:
+            raise RuntimeError(
+                "使用 SOCKS5 代理需要 PySocks，请安装：pip install PySocks"
+            ) from exc
+
+    for variable in proxy_variables:
+        if proxy_url:
+            os.environ[variable] = proxy_url
+        else:
+            os.environ.pop(variable, None)
+
+    if proxy_url:
+        os.environ["NO_PROXY"] = ""
+        os.environ["no_proxy"] = ""
+
+
+def configure_request_timeouts():
+    original_request = requests.sessions.Session.request
+    if getattr(original_request, "_chart_srv_timeout_configured", False):
+        return
+    request_signature = inspect.signature(original_request)
+
+    def request_with_timeout(session, *args, **kwargs):
+        bound = request_signature.bind(session, *args, **kwargs)
+        timeout = bound.arguments.get("timeout")
+        if timeout is None:
+            bound.arguments["timeout"] = (
+                REQUEST_CONNECT_TIMEOUT,
+                REQUEST_READ_TIMEOUT,
+            )
+        elif isinstance(timeout, (int, float)):
+            bound.arguments["timeout"] = (REQUEST_CONNECT_TIMEOUT, timeout)
+        return original_request(*bound.args, **bound.kwargs)
+
+    request_with_timeout._chart_srv_timeout_configured = True
+    requests.sessions.Session.request = request_with_timeout
+
+
+def configure_shared_http_session():
+    global SHARED_HTTP_SESSION
+    global ORIGINAL_REQUESTS_GET
+    global ORIGINAL_AKSHARE_RETRY
+    global ORIGINAL_AKSHARE_FUNC_RETRY
+
+    if SHARED_HTTP_SESSION is not None:
+        return
+
+    import akshare.utils.func as akshare_func
+    import akshare.utils.request as akshare_request
+
+    SHARED_HTTP_SESSION = requests.Session()
+    ORIGINAL_REQUESTS_GET = requests.get
+    ORIGINAL_AKSHARE_RETRY = akshare_request.request_with_retry
+    ORIGINAL_AKSHARE_FUNC_RETRY = akshare_func.request_with_retry
+    requests.get = SHARED_HTTP_SESSION.get
+
+    def request_with_retry(
+        url,
+        params=None,
+        timeout=15,
+        max_retries=3,
+        base_delay=1.0,
+        random_delay_range=(0.5, 1.5),
+    ):
+        last_exception = None
+        for attempt in range(max_retries):
+            try:
+                response = SHARED_HTTP_SESSION.get(
+                    url, params=params, timeout=timeout
+                )
+                response.raise_for_status()
+                return response
+            except (requests.RequestException, ValueError) as exc:
+                last_exception = exc
+                if attempt < max_retries - 1:
+                    delay = (
+                        base_delay * (2**attempt)
+                        + random.uniform(*random_delay_range)
+                    )
+                    time.sleep(delay)
+        raise last_exception
+
+    akshare_request.request_with_retry = request_with_retry
+    akshare_func.request_with_retry = request_with_retry
+
+
+def close_shared_http_session():
+    global SHARED_HTTP_SESSION
+    global ORIGINAL_REQUESTS_GET
+    global ORIGINAL_AKSHARE_RETRY
+    global ORIGINAL_AKSHARE_FUNC_RETRY
+
+    if SHARED_HTTP_SESSION is None:
+        return
+
+    import akshare.utils.func as akshare_func
+    import akshare.utils.request as akshare_request
+
+    requests.get = ORIGINAL_REQUESTS_GET
+    akshare_request.request_with_retry = ORIGINAL_AKSHARE_RETRY
+    akshare_func.request_with_retry = ORIGINAL_AKSHARE_FUNC_RETRY
+    SHARED_HTTP_SESSION.close()
+    SHARED_HTTP_SESSION = None
+    ORIGINAL_REQUESTS_GET = None
+    ORIGINAL_AKSHARE_RETRY = None
+    ORIGINAL_AKSHARE_FUNC_RETRY = None
 
 
 # ==================================================
@@ -282,6 +431,7 @@ def draw_chart(
     symbol,
     name,
     security_type,
+    filename,
 ):
     if len(minute_today) < 2:
         raise RuntimeError("当天一分钟行情不足，暂时无法绘图")
@@ -488,8 +638,12 @@ def draw_chart(
 
     fig.tight_layout()
 
-    filename = f"{symbol}-{security_type}-latest.jpg"
-    output_path = OUTPUT_DIR / filename
+    requested_path = Path(filename)
+    output_path = (
+        requested_path if requested_path.is_absolute()
+        else OUTPUT_DIR / requested_path
+    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
     fig.savefig(
         output_path,
@@ -519,6 +673,15 @@ def parse_args():
         choices=("stock", "index"),
         help="证券类型：stock 或 index（提供代码时默认 stock）",
     )
+    parser.add_argument(
+        "--filename",
+        help="输出图片路径（绝对路径直接使用，相对路径位于 charts 目录；默认：<代码>-<类型>-latest.jpg）",
+    )
+    parser.add_argument(
+        "--proxy",
+        type=validate_proxy_url,
+        help="网络代理地址，例如 http://127.0.0.1:8080 或 socks5://127.0.0.1:1080；默认直连",
+    )
     args = parser.parse_args()
     if args.symbol is None and args.name is None:
         args.symbol = "000300"
@@ -542,6 +705,9 @@ def main():
                 args.name, args.symbol)
 
     try:
+        configure_request_timeouts()
+        configure_proxy(args.proxy)
+        configure_shared_http_session()
         minute_today = None
 
         # 获取行情，失败时最多重试3次
@@ -592,6 +758,7 @@ def main():
             args.symbol,
             args.name,
             args.security_type,
+            args.filename or f"{args.symbol}-{args.security_type}-latest.jpg",
         )
 
         logger.info("任务完成")
@@ -602,6 +769,7 @@ def main():
         raise
 
     finally:
+        close_shared_http_session()
         logger.info("任务结束")
         logger.info("=" * 60)
 
